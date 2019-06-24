@@ -1,0 +1,22 @@
+$url = Read-Host "Enter the url"
+
+$loginID = Read-Host "Enter the Login Email ID"
+$password = Read-Host "Enter the password"
+$securepassword = ConvertTo-SecureString $password -AsPlainText -Force
+$cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $loginID,$securepassword
+
+Connect-PnPOnline $url -Credentials $cred
+$web = Get-PnPWeb
+$subwebs = Get-PnPSubWebs
+
+foreach($subweb in $subwebs){
+    Connect-PnPOnline $subweb.url -Credentials $cred
+    Write-Host "---"$subweb.Title"---"
+    $nodes = Get-PnPNavigationNode -Location QuickLaunch
+    Write-Host "Removed existing nodes"
+    $nodes | Remove-PnPNavigationNode -Force
+    #Remove-PnPNavigationNode -Location "QuickLaunch" -All   //Does not work
+    Add-PnPNavigationNode -Title $subweb.Title -Url $subweb.url -Location "QuickLaunch"
+    Write-Host "Added new nodes for the site"
+    Write-Host "------"
+}
